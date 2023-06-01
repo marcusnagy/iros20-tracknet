@@ -76,6 +76,7 @@ random.seed(0)
 np.random.seed(0)
 torch.manual_seed(0)
 torch.backends.cudnn.benchmark = True
+debug = False
 
 
 def project_points(points,K):
@@ -87,7 +88,7 @@ def project_points(points,K):
 
 
 def use_posecnn_res(class_id,seq_frame_str):
-	with open('{}/image_sets/keyframe.txt'.format(ycb_dir),'r') as ff:
+	with open('{}/image_sets/keyframe.txt'.format(args.ycb_dir),'r') as ff:
 		lines = ff.readlines()
 	seq_frames = []
 	for i in range(len(lines)):
@@ -129,6 +130,8 @@ class Tracker:
 		self.dataset_info = dataset_info
 		self.image_size = (dataset_info['resolution'], dataset_info['resolution'])
 		self.object_cloud = o3d.io.read_point_cloud(dataset_info['models'][0]['model_path'])
+		# self.object_cloud = o3d.io.read_triangle_mesh(dataset_info['models'][0]['model_path'])
+		# self.object_cloud = self.object_cloud.sample_points_uniformly(number_of_points=2500)
 		self.object_cloud = self.object_cloud.voxel_down_sample(voxel_size=0.005)
 
 		print('self.object_cloud loaded and downsampled')
@@ -148,7 +151,7 @@ class Tracker:
 
 		print('Loading ckpt from ',ckpt_dir)
 		checkpoint = torch.load(ckpt_dir)
-		print('pose track ckpt epoch={}'.format(checkpoint['epoch']))
+		#print('pose track ckpt epoch={}'.format(checkpoint['epoch']))
 
 		self.model = Se3TrackNet(image_size=self.image_size[0])
 		self.model.load_state_dict(checkpoint['state_dict'])
@@ -157,7 +160,7 @@ class Tracker:
 
 		if 'renderer' in dataset_info and dataset_info['renderer']=='pyrenderer':
 			print('Using pyrenderer')
-			self.renderer = Renderer([dataset_info['models'][0]['obj_path']],self.K,cam_cfg['height'],cam_cfg['width'])
+			self.renderer = Renderer([dataset_info['models'][0]['model_path']],self.K,cam_cfg['height'],cam_cfg['width'])
 		else:
 			print('Using vispy renderer')
 			self.renderer = VispyRenderer(dataset_info['models'][0]['model_path'], self.K, H=dataset_info['resolution'], W=dataset_info['resolution'])
@@ -426,9 +429,9 @@ def getResultsYcb():
 
 def predictSequenceYcb():
 	init = 'gt'
-	seq_id = 50
+	seq_id = 54
 	test_data_path = '{}/data_organized/%04d'.format(args.ycb_dir)%(seq_id)
-	class_id = 4
+	class_id = 12
 	if args.class_id is not None:
 		class_id = args.class_id
 	start_frame = 0
@@ -608,13 +611,21 @@ def predictSequenceMyData():
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--ycb_dir', default='/media/bowen/e25c9489-2f57-42dd-b076-021c59369fec/DATASET/Tracking/YCB_Video_Dataset')
-	parser.add_argument('--YCBInEOAT_dir', default='/media/bowen/e25c9489-2f57-42dd-b076-021c59369fec/catkin_ws/src/iros20_dataset/video_rosbag/IROS_SELECTED/FINISHED_LABEL.iros_submission_version/bleach0')
+	# parser.add_argument('--ycb_dir', default='/media/bowen/e25c9489-2f57-42dd-b076-021c59369fec/DATASET/YCB_Video_Dataset')
+	# parser.add_argument('--YCBInEOAT_dir', default='/media/bowen/e25c9489-2f57-42dd-b076-021c59369fec/DATASET/YCBInEOAT/bleach0')
+	# parser.add_argument('--train_data_path', help="train_data_path path", default="None", type=str)
+	# parser.add_argument('--class_id', default=-1, type=int, help='class id in YCB Video')
+	# parser.add_argument('--ckpt_dir', type=str)
+	# parser.add_argument('--mean_std_path', type=str)
+	# parser.add_argument('--outdir', help="save res dir", type=str, default='/home/bowen/debug/')
+	# parser.add_argument('--reinit_frames', type=str, default=None,help='reinit to compare with PoseRBPF')
+	parser.add_argument('--ycb_dir', default='/media/marcusmartin/e25c9489-2f57-42dd-b076-021c59369fec/DATASET/YCB_Video_Dataset')
+	parser.add_argument('--YCBInEOAT_dir', default='/media/marcusmartin/e25c9489-2f57-42dd-b076-021c59369fec/DATASET/YCBInEOAT/bleach0')
 	parser.add_argument('--train_data_path', help="train_data_path path", default="None", type=str)
 	parser.add_argument('--class_id', default=-1, type=int, help='class id in YCB Video')
 	parser.add_argument('--ckpt_dir', type=str)
 	parser.add_argument('--mean_std_path', type=str)
-	parser.add_argument('--outdir', help="save res dir", type=str, default='/home/bowen/debug/')
+	parser.add_argument('--outdir', help="save res dir", type=str, default='/home/marcusmartin/debug/')
 	parser.add_argument('--reinit_frames', type=str, default=None,help='reinit to compare with PoseRBPF')
 
 	args = parser.parse_args()
@@ -635,8 +646,8 @@ if __name__ == '__main__':
 	images_mean = np.load(os.path.join(mean_std_path, "mean.npy"))
 	images_std = np.load(os.path.join(mean_std_path, "std.npy"))
 
-	# predictSequenceYcb()
-	# getResultsYcb()
-	predictSequenceMyData()
+	predictSequenceYcb()
+	getResultsYcb()
+	# predictSequenceMyData()
 
 

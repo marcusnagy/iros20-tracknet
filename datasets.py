@@ -48,7 +48,7 @@ import torch
 import transformations as T
 
 class TrackDataset(Dataset):
-	def __init__(self, root,mode,images_mean, images_std, pretransforms=None, augmentations=None, posttransforms=None, dataset_info=None, trans_normalizer=0.03, rot_normalizer=5*np.pi/180):
+	def __init__(self, root,mode,images_mean, images_std, pretransforms=None, augmentations=None, posttransforms=None, dataset_info=None, trans_normalizer=0.03, rot_normalizer=10*np.pi/180):
 		self.mode = mode
 		self.images_mean = images_mean
 		self.images_std = images_std

@@ -1,5 +1,3 @@
-# -*- coding: future_fstrings -*-
-
 #
 # Authors: Bowen Wen
 # Contact: wenbowenxjtu@gmail.com
@@ -34,7 +32,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-
 import bpy
 import os, sys, time,copy,string
 code_dir = os.path.dirname(os.path.realpath(__file__))
@@ -264,7 +261,7 @@ def get_dynamic_objects():
 
 def generate():
   code_dir = os.path.dirname(os.path.realpath(__file__))
-  dataset_info_dir = f"{code_dir}/dataset_info.yml"
+  dataset_info_dir = "{}/dataset_info.yml".format(code_dir)
   with open(dataset_info_dir,'r') as ff:
     dataset_info = yaml.safe_load(ff)
 
@@ -277,10 +274,10 @@ def generate():
   zmax = dataset_info['blender']['range_z'][1]
 
   code_dir = os.path.dirname(os.path.realpath(__file__))
-  out_dir = f'{code_dir}/generated_data/'
+  out_dir = '{}/generated_data/'.format(code_dir)
 
   print('Using: {}'.format(dataset_info_dir))
-  os.system(f'rm -rf {out_dir} && mkdir -p {out_dir}')
+  os.system('rm -rf {} && mkdir -p {}'.format(out_dir, out_dir))
 
   H = dataset_info['camera']['height']
   W = dataset_info['camera']['width']
@@ -310,7 +307,7 @@ def generate():
   id2ob = {}
   obs = get_dynamic_objects()
   for ob in obs:
-    print(ob.name)
+    print("Object name:", ob.name)
     bpy.context.scene.objects.active = ob
     bpy.ops.rigidbody.object_add(type='ACTIVE')
     bpy.ops.object.modifier_add(type = 'COLLISION')

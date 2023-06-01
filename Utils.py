@@ -106,7 +106,7 @@ def compute_cloud_diameter(points):
 
 
 def findClassContainedVideosYcb(class_id, testset=True):
-  ycb_dir = '/media/bowen/e25c9489-2f57-42dd-b076-021c59369fec/DATASET/Tracking/YCB_Video_Dataset/data_organized/'
+  ycb_dir = '/media/marcusmartin/e25c9489-2f57-42dd-b076-021c59369fec/DATASET/Tracking/YCB_Video_Dataset/data_organized/'
   gt_dirs = glob.glob(ycb_dir+'**/pose_gt')
   gt_dirs.sort()
   video_indices = []
@@ -303,7 +303,7 @@ def compute_bbox(pose, K, scale_size=230, scale=(1, 1, 1)):
   obj_y = pose[1, 3] * scale[1]
   obj_z = pose[2, 3] * scale[2]
   offset = scale_size / 2
-  points = np.ndarray((4, 3), dtype=np.float)
+  points = np.ndarray((4, 3), dtype=np.float32)
   points[0] = [obj_x - offset, obj_y - offset, obj_z]     # top left
   points[1] = [obj_x - offset, obj_y + offset, obj_z]     # top right
   points[2] = [obj_x + offset, obj_y - offset, obj_z]     # bottom left
@@ -314,6 +314,70 @@ def compute_bbox(pose, K, scale_size=230, scale=(1, 1, 1)):
   projected_vus = np.round(projected_vus).astype(np.int32)
   return projected_vus
 
+
+def mm_crop_bbox(color, depth, boundingbox, output_size=(100, 100), seg=None):
+  left = np.min(boundingbox[:, 1])
+  right = np.max(boundingbox[:, 1])
+  top = np.min(boundingbox[:, 0])
+  bottom = np.max(boundingbox[:, 0])
+
+  left, right = min(boundingbox[:,1]), max(boundingbox[:,1])
+  top, bottom = min(boundingbox[:,0]), max(boundingbox[:,0])
+  print(boundingbox)
+  print(boundingbox[:,1])
+  print(boundingbox[:,0])
+
+  h, w, c = color.shape
+  crop_w = abs(right - left)
+  crop_h = abs(bottom - top)
+  print(f"crop_w: {crop_w}, crop_h: {crop_h}")
+  color_crop = np.zeros((crop_h, crop_w, 3), dtype=color.dtype)
+  depth_crop = np.zeros((crop_h, crop_w), dtype=np.float32)
+  seg_crop = np.zeros((crop_h, crop_w), dtype=np.uint8)
+  top_offset = abs(min(top, 0))
+  bottom_offset = min(abs(crop_h - (bottom - h)), crop_h)
+  right_offset = min(abs(crop_w - (right - w)), crop_w)
+  left_offset = abs(min(left, 0))
+
+  top = max(top, 0)
+  left = max(left, 0)
+  bottom = max(min(bottom, h), 0)
+  right = max(min(right, w), 0)
+
+  is_within = (
+    (0 <= top and top < h) and
+    (0 <= bottom and bottom < h) and
+    (0 <= left and left < w) and
+    (0 <= right and right < w)
+  )
+
+  if is_within:
+    if top > bottom:
+      tmp = top
+      top = bottom
+      bottom = tmp
+    print("Width: %s | Height: %s" % (w, h))
+    print(f"Offset Top: {top_offset}\nOffset Bottom: {bottom_offset}\nTop: {top}\nBottom: {bottom}")
+    print(f"Offset Left: {left_offset}\nOffset Right: {right_offset}\nLeft: {left}\nRight: {right}")
+    color_crop[top_offset:bottom_offset, left_offset:right_offset, :] = color[top:bottom, left:right, :]
+    depth_crop[top_offset:bottom_offset, left_offset:right_offset] = depth[top:bottom, left:right]
+  resized_rgb = cv2.resize(color_crop, output_size, interpolation=cv2.INTER_NEAREST)
+  resized_depth = cv2.resize(depth_crop, output_size, interpolation=cv2.INTER_NEAREST)
+
+  if seg is not None:
+    seg_crop[top_offset:bottom_offset, left_offset:right_offset] = seg[top:bottom, left:right]
+    resized_seg = cv2.resize(seg_crop, output_size, interpolation=cv2.INTER_NEAREST)
+    final_seg = resized_seg.copy()
+
+  mask_rgb = resized_rgb != 0
+  mask_depth = resized_depth != 0
+  resized_depth = resized_depth.astype(np.uint16)
+  final_rgb = resized_rgb * mask_rgb
+  final_depth = resized_depth * mask_depth
+  if seg is not None:
+    return final_rgb, final_depth, final_seg
+  else:
+    return final_rgb, final_depth
 
 
 def crop_bbox(color, depth, boundingbox, output_size=(100, 100), seg=None):
@@ -326,7 +390,7 @@ def crop_bbox(color, depth, boundingbox, output_size=(100, 100), seg=None):
   crop_w = right - left
   crop_h = bottom - top
   color_crop = np.zeros((crop_h, crop_w, 3), dtype=color.dtype)
-  depth_crop = np.zeros((crop_h, crop_w), dtype=np.float)
+  depth_crop = np.zeros((crop_h, crop_w), dtype=np.float32)
   seg_crop = np.zeros((crop_h, crop_w), dtype=np.uint8)
   top_offset = abs(min(top, 0))
   bottom_offset = min(crop_h - (bottom - h), crop_h)

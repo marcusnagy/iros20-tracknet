@@ -1,0 +1,23 @@
+batch_size: 5
+data_augmentation:
+  bright_mag:
+  - 0.5
+  - 1.5
+  depth_missing_percent: 0.4
+  gaussian_blur_kernel: 6
+  gaussian_noise:
+    depth: 5
+    rgb: 2
+  hsv_noise:
+  - 15
+  - 15
+  - 15
+data_path: /home/marcusmartin/repos/iros20-6d-pose-tracking/generated_data_pair/train_data_blender_DR
+epochs: 300
+learning_rate: 0.001
+loss_weights:
+  rot: 1
+  trans: 1
+n_workers: 16
+validation_path: /home/marcusmartin/repos/iros20-6d-pose-tracking/generated_data_pair/validation_data_blender_DR
+weight_decay: 1.0e-06

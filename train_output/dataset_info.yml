@@ -1,0 +1,59 @@
+blender:
+  env_light_color:
+  - - 0
+    - 0.05
+  - - 0
+    - 0.05
+  - - 0
+    - 0.05
+  env_light_range:
+  - 0.3
+  - 5
+  lamp_brightness:
+  - 0.1
+  - 1
+  lamp_colors:
+  - - 0.5
+    - 1
+  - - 0.5
+    - 1
+  - - 0.5
+    - 1
+  lamp_pos_range:
+  - - -3
+    - 3
+  - - -3
+    - 3
+  - - -2
+    - 0
+  max_lamp_num: 3
+  range_x:
+  - -0.3
+  - 0.3
+  range_y:
+  - -0.3
+  - 0.3
+  range_z:
+  - 0.4
+  - 0.9
+boundingbox: 10
+camera:
+  centerX: 312.9869
+  centerY: 241.3109
+  focalX: 1066.778
+  focalY: 1067.487
+  height: 480
+  width: 640
+distribution: gauss
+max_rotation: 10
+max_translation: 0.02
+models:
+  0:
+    obj_path: /home/marcusmartin/iros20-tracking/object_models/tall/textured.obj
+object_width: 257.67441901620737
+renderer: pyrenderer
+resolution: 176
+texture_folders:
+- /media/marcusmartin/e25c9489-2f57-42dd-b076-021c59369fec/DATASET/dtd/backgrounds/**/**/*.jpg
+train_samples: 400
+val_samples: 20
